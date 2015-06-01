@@ -271,7 +271,8 @@ angular.module('angular-carousel').run(['$templateCache', function($templateCach
                             autoSlideDuration: 3,
                             bufferSize: 5,
                             /* in container % how much we need to drag to trigger the slide change */
-                            moveTreshold: 0.1
+                            moveTreshold: 0.1,
+                            defaultIndex: 0
                         };
 
                         // TODO
@@ -471,6 +472,11 @@ angular.module('angular-carousel').run(['$templateCache', function($templateCach
                                 }, duration * 1000);
                             };
                         }
+                        
+                        if (iAttributes.rnCarouselDefaultIndex) {
+                            var defaultIndexModel = $parse(iAttributes.rnCarouselDefaultIndex);
+                            options.defaultIndex = defaultIndexModel(scope.$parent) || 0;
+                        }
 
                         if (iAttributes.rnCarouselIndex) {
                             var updateParentIndex = function(value) {
@@ -485,7 +491,7 @@ angular.module('angular-carousel').run(['$templateCache', function($templateCach
                                 scope.$parent.$watch(indexModel, function(newValue, oldValue) {
 
                                     if (newValue !== undefined && newValue !== null) {
-                                        if (currentSlides && newValue >= currentSlides.length) {
+                                        if (currentSlides && currentSlides.length > 0 && newValue >= currentSlides.length) {
                                             newValue = currentSlides.length - 1;
                                             updateParentIndex(newValue);
                                         } else if (currentSlides && newValue < 0) {
@@ -501,6 +507,12 @@ angular.module('angular-carousel').run(['$templateCache', function($templateCach
                                     }
                                 });
                                 isIndexBound = true;
+                                
+                                if (options.defaultIndex) {
+                                    goToSlide(options.defaultIndex, {
+                                        animate: !init
+                                    });
+                                }
                             } else if (!isNaN(iAttributes.rnCarouselIndex)) {
                                 /* if user just set an initial number, set it */
                                 goToSlide(parseInt(iAttributes.rnCarouselIndex, 10), {
@@ -508,7 +520,7 @@ angular.module('angular-carousel').run(['$templateCache', function($templateCach
                                 });
                             }
                         } else {
-                            goToSlide(0, {
+                            goToSlide(options.defaultIndex, {
                                 animate: !init
                             });
                             init = false;
